@@ -1,13 +1,11 @@
-package com.foodieapp.order.order_service;
+package com.foodieapp.order;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class OrderServiceApplication {
-
 	public static void main(String[] args) {
 		SpringApplication.run(OrderServiceApplication.class, args);
 	}
-
 }
