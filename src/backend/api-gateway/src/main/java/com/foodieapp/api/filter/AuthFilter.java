@@ -28,6 +28,9 @@ public class AuthFilter implements Filter {
             "/api/auth/register",
             "/api/auth/login",
             "/api/restaurants",
+            // review-service enforces its own auth (GET is public, POST/PUT/DELETE
+            // require a valid JWT) — let requests through here and rely on it downstream.
+            "/api/reviews",
             "/actuator",
             "/gateway"
     );
