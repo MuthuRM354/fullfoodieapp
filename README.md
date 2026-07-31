@@ -243,17 +243,23 @@ The included `frontend/vercel.json` handles SPA routing rewrites automatically.
 
 The `render.yaml` at the project root defines all 10 Spring Boot web services (api-gateway + 9 backend services) as a Render Blueprint. It does **not** provision Render's own databases — every service is MySQL/JPA, and Render's free database tier is PostgreSQL, so this blueprint intentionally leaves `DB_URL`/`DB_USERNAME`/`DB_PASSWORD` as `sync: false` placeholders you fill in per-service after connecting an external free MySQL host (see below). `JWT_SECRET` and `INTERNAL_API_KEY` **are** provisioned automatically, via the `shared-secrets` envVarGroup at the top of `render.yaml` — Render generates each value once and injects the same value into every service, so you don't need to copy/paste secrets between service dashboards.
 
+> **Note:** PlanetScale removed its free tier in April 2024 — it's now ~$39/mo minimum for MySQL, so it's no longer the free option this guide originally assumed. **[Aiven for MySQL](https://aiven.io/free-mysql-database)** currently has a genuinely free, no-credit-card, no-time-limit plan (1 GB storage/RAM, single node) and is what's documented below instead. It auto-suspends after a period of inactivity (with email warning) and wakes on the next connection — fine for a low-traffic demo, not for a high-traffic production app.
+
 **Blueprint deploy path:**
 
 1. Sign up at [render.com](https://render.com), push this repo to GitHub.
-2. Go to **New → Blueprint**, connect the repo. Render reads `render.yaml` and creates all 10 web services in one go.
-3. For the database, use **PlanetScale** (free MySQL, no credit card):
-   - Create one database per service (or one database with schema prefixes).
-   - In the Render dashboard, set `DB_URL` / `DB_USERNAME` / `DB_PASSWORD` on each of the 9 backend services (not api-gateway, which has no DB).
-4. (Optional) On `foodieapp-notification-service`, set `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` for real email, and/or `FAST2SMS_API_KEY` for real SMS. Leave unset to keep log-only mode.
-5. Set `CORS_ALLOWED_ORIGINS` on `foodieapp-api-gateway` to your deployed frontend URL once you know it.
-6. Services auto-deploy; api-gateway should finish last since it depends on the others being reachable.
-7. Update `frontend/.env.production` → `REACT_APP_API_URL=https://<gateway-url>.onrender.com` and redeploy the frontend.
+2. Sign up at [aiven.io](https://aiven.io/free-mysql-database) (no card required) → **Create service** → **MySQL** → **Free** plan → pick a region → create. Wait for it to go green ("Running").
+3. On the service's **Overview** page, copy the **Host**, **Port**, **User** (`avnadmin`), and **Password**.
+4. Connect with any MySQL client (e.g. `mysql -h <host> -P <port> -u avnadmin -p --ssl-mode=REQUIRED`, or use Aiven's built-in web SQL console) and run `db/init.sql` to create all 9 databases. Skip the `CREATE USER` block in that file — Aiven's `avnadmin` user already has full access, so just use it directly for every service (one Aiven org account only gets one free MySQL *service*, but a service can hold as many databases as you like).
+5. Go to **New → Blueprint** in Render, connect the repo. Render reads `render.yaml` and creates all 10 web services in one go.
+6. On each of the 9 backend services (not api-gateway, which has no DB) in the Render dashboard, set:
+   - `DB_URL` = `jdbc:mysql://<aiven-host>:<aiven-port>/<db-name>?sslMode=REQUIRED&serverTimezone=UTC&allowPublicKeyRetrieval=true` (swap in that service's own database name, e.g. `foodieapp_users` for user-service)
+   - `DB_USERNAME` = `avnadmin`
+   - `DB_PASSWORD` = (the Aiven password from step 3)
+7. (Optional) On `foodieapp-notification-service`, set `MAIL_USERNAME` / `MAIL_PASSWORD` / `MAIL_FROM` for real email, and/or `FAST2SMS_API_KEY` for real SMS. Leave unset to keep log-only mode.
+8. Set `CORS_ALLOWED_ORIGINS` on `foodieapp-api-gateway` to your deployed frontend URL once you know it.
+9. Services auto-deploy; api-gateway should finish last since it depends on the others being reachable.
+10. Update `frontend/.env.production` → `REACT_APP_API_URL=https://<gateway-url>.onrender.com` and redeploy the frontend.
 
 **Manual path (if you'd rather not use the Blueprint UI):** create each Web Service by hand with Runtime: Java, Root directory: `src/backend/<service-name>`, Build command: `./mvnw clean package -DskipTests`, Start command: `java -jar target/<service-name>-*.jar` — same env vars as above, just set `JWT_SECRET`/`INTERNAL_API_KEY` to the same value on every service yourself.
 
