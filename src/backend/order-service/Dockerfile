@@ -15,4 +15,4 @@ USER spring
 COPY --from=build /app/target/order-service-*.jar app.jar
 EXPOSE 8083
 ENV SERVER_PORT=8083
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

@@ -261,7 +261,7 @@ The `render.yaml` at the project root defines all 10 Spring Boot web services (a
 9. Services auto-deploy; api-gateway should finish last since it depends on the others being reachable.
 10. Update `frontend/.env.production` → `REACT_APP_API_URL=https://<gateway-url>.onrender.com` and redeploy the frontend.
 
-**Manual path (if you'd rather not use the Blueprint UI):** create each Web Service by hand with Runtime: Java, Root directory: `src/backend/<service-name>`, Build command: `./mvnw clean package -DskipTests`, Start command: `java -jar target/<service-name>-*.jar` — same env vars as above, just set `JWT_SECRET`/`INTERNAL_API_KEY` to the same value on every service yourself.
+**Manual path (if you'd rather not use the Blueprint UI):** create each Web Service by hand with Runtime: Docker, Dockerfile path: `src/backend/<service-name>/Dockerfile`, Docker build context: `src/backend/<service-name>` — same env vars as above, just set `JWT_SECRET`/`INTERNAL_API_KEY` to the same value on every service yourself. (Render's native runtimes are node/python/go/ruby/rust/elixir — there's no native Java runtime, which is why this blueprint deploys via each service's own Dockerfile instead of `./mvnw`/`java -jar` directly.)
 
 **Local Docker (optional):** each service now has a working multi-stage `Dockerfile` (`docker build -t foodieapp-user-service src/backend/user-service`, etc.) for local container testing. Render's own deploy does not use Docker — it builds directly with each service's Maven wrapper, as described above.
 

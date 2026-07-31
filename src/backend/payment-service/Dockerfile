@@ -15,4 +15,4 @@ USER spring
 COPY --from=build /app/target/payment-service-*.jar app.jar
 EXPOSE 8084
 ENV SERVER_PORT=8084
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar /app/app.jar"]

@@ -48,12 +48,12 @@ services:
   # ── API Gateway (deploy last — depends on all others) ──
   - type: web
     name: foodieapp-api-gateway
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/api-gateway
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/api-gateway-*.jar
+    dockerfilePath: src/backend/api-gateway/Dockerfile
+    dockerContext: src/backend/api-gateway
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -85,12 +85,12 @@ services:
   # ── User Service ────────────────────────────────────────
   - type: web
     name: foodieapp-user-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/user-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/user-service-*.jar
+    dockerfilePath: src/backend/user-service/Dockerfile
+    dockerContext: src/backend/user-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -99,7 +99,7 @@ services:
       - key: SERVER_PORT
         value: 8081
       - key: DB_URL
-        sync: false   # Set in Render dashboard: jdbc:mysql://<host>/<db>?useSSL=true&requireSSL=true
+        sync: false   # Set in Render dashboard: jdbc:mysql://<host>:<port>/<db>?sslMode=REQUIRED&serverTimezone=UTC&allowPublicKeyRetrieval=true
       - key: DB_USERNAME
         sync: false
       - key: DB_PASSWORD
@@ -108,12 +108,12 @@ services:
   # ── Restaurant Service ──────────────────────────────────
   - type: web
     name: foodieapp-restaurant-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/restaurant-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/restaurant-service-*.jar
+    dockerfilePath: src/backend/restaurant-service/Dockerfile
+    dockerContext: src/backend/restaurant-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -131,12 +131,12 @@ services:
   # ── Order Service ────────────────────────────────────────
   - type: web
     name: foodieapp-order-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/order-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/order-service-*.jar
+    dockerfilePath: src/backend/order-service/Dockerfile
+    dockerContext: src/backend/order-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -156,12 +156,12 @@ services:
   # ── Payment Service ──────────────────────────────────────
   - type: web
     name: foodieapp-payment-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/payment-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/payment-service-*.jar
+    dockerfilePath: src/backend/payment-service/Dockerfile
+    dockerContext: src/backend/payment-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -179,12 +179,12 @@ services:
   # ── Delivery Partner Service ─────────────────────────────
   - type: web
     name: foodieapp-delivery-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/delivery-partner-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/delivery-partner-service-*.jar
+    dockerfilePath: src/backend/delivery-partner-service/Dockerfile
+    dockerContext: src/backend/delivery-partner-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -202,12 +202,12 @@ services:
   # ── Notification Service ─────────────────────────────────
   - type: web
     name: foodieapp-notification-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/notification-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/notification-service-*.jar
+    dockerfilePath: src/backend/notification-service/Dockerfile
+    dockerContext: src/backend/notification-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -241,12 +241,12 @@ services:
   # ── Review Service ───────────────────────────────────────
   - type: web
     name: foodieapp-review-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/review-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/review-service-*.jar
+    dockerfilePath: src/backend/review-service/Dockerfile
+    dockerContext: src/backend/review-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -266,12 +266,12 @@ services:
   # ── Tracking Service ─────────────────────────────────────
   - type: web
     name: foodieapp-tracking-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/tracking-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/tracking-service-*.jar
+    dockerfilePath: src/backend/tracking-service/Dockerfile
+    dockerContext: src/backend/tracking-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
@@ -289,12 +289,12 @@ services:
   # ── Admin Service ────────────────────────────────────────
   - type: web
     name: foodieapp-admin-service
-    runtime: java
+    runtime: docker
     region: oregon
     plan: free
     rootDir: src/backend/admin-service
-    buildCommand: ./mvnw clean package -DskipTests
-    startCommand: java $JAVA_OPTS -jar target/admin-service-*.jar
+    dockerfilePath: src/backend/admin-service/Dockerfile
+    dockerContext: src/backend/admin-service
     healthCheckPath: /actuator/health
     envVars:
       - fromGroup: shared-secrets
