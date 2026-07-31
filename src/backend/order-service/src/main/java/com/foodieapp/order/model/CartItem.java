@@ -17,6 +17,8 @@ public class CartItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // insertable=false, updatable=false: FK managed by @JoinColumn on Cart.items
+    @Column(name = "cartId", insertable = false, updatable = false)
     private Long cartId;
 
     @Column(nullable = false)

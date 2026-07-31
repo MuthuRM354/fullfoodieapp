@@ -34,11 +34,15 @@ public class MenuItem {
 
     private String category;
 
+    // Boolean wrapper → Lombok generates getIsVeg() → Jackson serializes as "isVeg"
+    // Frontend reads: item.isVeg  ✓
     @Builder.Default
-    private boolean isVeg = false;
+    private Boolean isVeg = false;
 
+    // Boolean wrapper → Lombok generates getIsAvailable() → Jackson serializes as "isAvailable"
+    // Frontend reads: item.isAvailable  ✓
     @Builder.Default
-    private boolean isAvailable = true;
+    private Boolean isAvailable = true;
 
     private String imageUrl;
 

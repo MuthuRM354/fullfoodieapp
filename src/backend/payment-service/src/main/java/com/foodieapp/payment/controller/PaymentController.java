@@ -1,6 +1,7 @@
 package com.foodieapp.payment.controller;
 
 import com.foodieapp.payment.model.PaymentMethod;
+import com.foodieapp.payment.model.PaymentStatus;
 import com.foodieapp.payment.model.Transaction;
 import com.foodieapp.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +30,17 @@ public class PaymentController {
                 request.getOrDefault("paymentMethod", "CASH").toString());
 
             Transaction txn = paymentService.initiatePayment(orderId, userId, amount, method);
-            // Auto-confirm for simulation
+            // Immediately route through the (simulated) gateway rather than
+            // deferring confirmation to a separate webhook/callback step.
             txn = paymentService.confirmPayment(txn.getId());
-            return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of("success", true, "message", "Payment successful", "data", txn));
+
+            boolean success = txn.getStatus() == PaymentStatus.SUCCESS;
+            String message = success
+                    ? "Payment successful"
+                    : "Payment failed" + (txn.getFailureReason() != null ? ": " + txn.getFailureReason() : "");
+
+            return ResponseEntity.status(success ? HttpStatus.CREATED : HttpStatus.PAYMENT_REQUIRED)
+                    .body(Map.of("success", success, "message", message, "data", txn));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }

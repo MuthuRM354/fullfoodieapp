@@ -18,8 +18,15 @@ public class NotificationController {
             Long userId = Long.parseLong(req.get("userId").toString());
             String title = req.get("title").toString();
             String message = req.get("message").toString();
-            NotificationType type = NotificationType.valueOf(req.getOrDefault("type", "ACCOUNT").toString());
-            Notification n = service.save(userId, title, message, type);
+            NotificationType type;
+            try {
+                type = NotificationType.valueOf(req.getOrDefault("type", "ACCOUNT").toString());
+            } catch (IllegalArgumentException ex) {
+                type = NotificationType.ACCOUNT;
+            }
+            String email = req.get("email") != null ? req.get("email").toString() : null;
+            String phone = req.get("phone") != null ? req.get("phone").toString() : null;
+            Notification n = service.save(userId, title, message, type, email, phone);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("success", true, "data", n));
         } catch (Exception e) { return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage())); }
     }

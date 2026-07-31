@@ -33,6 +33,8 @@ public class User {
     @Column(unique = true)
     private String phone;
 
+    private String address;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;

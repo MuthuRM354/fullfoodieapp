@@ -1,0 +1,314 @@
+# ============================================================
+# Render.com Blueprint — FoodieApp Microservices
+# https://render.com/docs/blueprint-spec
+#
+# DATABASE SETUP (one-time, before deploying):
+#   1. Create a FREE MySQL database at https://planetscale.com
+#      (5 GB storage, 1 B row reads/month — no credit card needed)
+#   2. Get the connection string: Settings → Connect → Java
+#   3. Create one database per service (or one shared DB with
+#      separate schemas) and fill in the env vars below.
+#   NOTE: this blueprint intentionally does NOT provision Render
+#   databases (Render's own Postgres isn't used — every service is
+#   MySQL/JPA). DB_URL/DB_USERNAME/DB_PASSWORD below are `sync: false`
+#   placeholders you fill in per service in the Render dashboard.
+#
+# SHARED SECRETS (JWT_SECRET, INTERNAL_API_KEY):
+#   Defined once in the `shared-secrets` envVarGroup below and
+#   referenced by every service via `envVarGroups`. Render generates
+#   each value once and the SAME value is injected into every service
+#   automatically — no manual copy/paste between service dashboards,
+#   and no risk of the values drifting out of sync.
+#
+# DEPLOY ORDER:
+#   1. Push this repo to GitHub
+#   2. Go to render.com → New → Blueprint → connect this repo
+#   3. Fill in all DB_* env vars (and, if you want real email/SMS,
+#      MAIL_USERNAME/MAIL_PASSWORD/FAST2SMS_API_KEY on
+#      foodieapp-notification-service) in the Render dashboard
+#   4. Services auto-deploy; api-gateway starts last
+# ============================================================
+
+envVarGroups:
+  - name: shared-secrets
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: INTERNAL_API_KEY
+        generateValue: true
+
+services:
+
+  # ── API Gateway (deploy last — depends on all others) ──
+  - type: web
+    name: foodieapp-api-gateway
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/api-gateway
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/api-gateway-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8080
+      - key: SERVICES_USER
+        value: https://foodieapp-user-service.onrender.com
+      - key: SERVICES_RESTAURANT
+        value: https://foodieapp-restaurant-service.onrender.com
+      - key: SERVICES_ORDER
+        value: https://foodieapp-order-service.onrender.com
+      - key: SERVICES_PAYMENT
+        value: https://foodieapp-payment-service.onrender.com
+      - key: SERVICES_DELIVERY
+        value: https://foodieapp-delivery-service.onrender.com
+      - key: SERVICES_NOTIFICATION
+        value: https://foodieapp-notification-service.onrender.com
+      - key: SERVICES_REVIEW
+        value: https://foodieapp-review-service.onrender.com
+      - key: SERVICES_TRACKING
+        value: https://foodieapp-tracking-service.onrender.com
+      - key: SERVICES_ADMIN
+        value: https://foodieapp-admin-service.onrender.com
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false   # Set to your Vercel URL: https://your-app.vercel.app (defaults to * if unset)
+
+  # ── User Service ────────────────────────────────────────
+  - type: web
+    name: foodieapp-user-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/user-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/user-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8081
+      - key: DB_URL
+        sync: false   # Set in Render dashboard: jdbc:mysql://<host>/<db>?useSSL=true&requireSSL=true
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+  # ── Restaurant Service ──────────────────────────────────
+  - type: web
+    name: foodieapp-restaurant-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/restaurant-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/restaurant-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8082
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+  # ── Order Service ────────────────────────────────────────
+  - type: web
+    name: foodieapp-order-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/order-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/order-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8083
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: NOTIFICATION_SERVICE_URL
+        value: https://foodieapp-notification-service.onrender.com
+
+  # ── Payment Service ──────────────────────────────────────
+  - type: web
+    name: foodieapp-payment-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/payment-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/payment-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8084
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+  # ── Delivery Partner Service ─────────────────────────────
+  - type: web
+    name: foodieapp-delivery-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/delivery-partner-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/delivery-partner-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8085
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+  # ── Notification Service ─────────────────────────────────
+  - type: web
+    name: foodieapp-notification-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/notification-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/notification-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8086
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: USER_SERVICE_URL
+        value: https://foodieapp-user-service.onrender.com
+      # Optional — real email via Gmail SMTP. Leave unset to run in
+      # log-only mode (notifications still save to the DB, just no
+      # email is actually sent). See notification-service README for
+      # how to create a Gmail App Password.
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      # Optional — real SMS via Fast2SMS (free credits, no
+      # subscription). Leave unset to run in log-only mode.
+      - key: FAST2SMS_API_KEY
+        sync: false
+
+  # ── Review Service ───────────────────────────────────────
+  - type: web
+    name: foodieapp-review-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/review-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/review-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8088
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: RESTAURANT_SERVICE_URL
+        value: https://foodieapp-restaurant-service.onrender.com
+
+  # ── Tracking Service ─────────────────────────────────────
+  - type: web
+    name: foodieapp-tracking-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/tracking-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/tracking-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8087
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+
+  # ── Admin Service ────────────────────────────────────────
+  - type: web
+    name: foodieapp-admin-service
+    runtime: java
+    region: oregon
+    plan: free
+    rootDir: src/backend/admin-service
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java $JAVA_OPTS -jar target/admin-service-*.jar
+    healthCheckPath: /actuator/health
+    envVarGroups:
+      - shared-secrets
+    envVars:
+      - key: JAVA_OPTS
+        value: -Xmx400m -Xms128m -XX:+UseSerialGC
+      - key: SERVER_PORT
+        value: 8089
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false

@@ -18,11 +18,13 @@ public class MenuService {
         return menuRepository.findByRestaurantId(restaurantId);
     }
 
+    @Transactional
     public MenuItem addMenuItem(Long restaurantId, MenuItem item) {
         item.setRestaurantId(restaurantId);
         return menuRepository.save(item);
     }
 
+    @Transactional
     public MenuItem updateMenuItem(Long restaurantId, Long itemId, MenuItem updated) {
         MenuItem existing = menuRepository.findById(itemId)
                 .orElseThrow(() -> new RuntimeException("Menu item not found: " + itemId));
@@ -34,8 +36,9 @@ public class MenuService {
         if (updated.getPrice() != null) existing.setPrice(updated.getPrice());
         if (updated.getCategory() != null) existing.setCategory(updated.getCategory());
         if (updated.getImageUrl() != null) existing.setImageUrl(updated.getImageUrl());
-        existing.setVeg(updated.isVeg());
-        existing.setAvailable(updated.isAvailable());
+        // Boolean wrapper: Lombok generates getIsVeg()/setIsVeg() (not isVeg()/setVeg())
+        if (updated.getIsVeg() != null) existing.setIsVeg(updated.getIsVeg());
+        if (updated.getIsAvailable() != null) existing.setIsAvailable(updated.getIsAvailable());
         return menuRepository.save(existing);
     }
 

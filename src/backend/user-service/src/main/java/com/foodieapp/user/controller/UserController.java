@@ -53,4 +53,26 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
         }
     }
+
+    /**
+     * PUT /api/users/me — update the currently authenticated user's profile.
+     * Frontend calls this from the Profile page (no need to know the user's ID).
+     */
+    @PutMapping("/me")
+    public ResponseEntity<?> updateCurrentUser(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestBody UserUpdateRequest request) {
+        try {
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(401).body(Map.of("success", false, "message", "No token provided"));
+            }
+            String token = authHeader.substring(7);
+            String email = jwtUtil.extractSubject(token);
+            User currentUser = userService.getUserByEmail(email);
+            User updated = userService.updateUser(currentUser.getId(), request);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Profile updated", "data", updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
 }

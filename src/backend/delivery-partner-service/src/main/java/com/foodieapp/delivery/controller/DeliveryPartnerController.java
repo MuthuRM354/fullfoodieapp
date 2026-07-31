@@ -24,6 +24,11 @@ public class DeliveryPartnerController {
     @GetMapping("/available") public ResponseEntity<?> getAvailable() {
         return ResponseEntity.ok(Map.of("success", true, "data", service.getAvailable()));
     }
+    // Lookup by auth user ID (used by frontend which only knows the logged-in user's account ID)
+    @GetMapping("/user/{userId}") public ResponseEntity<?> getByUserId(@PathVariable Long userId) {
+        try { return ResponseEntity.ok(Map.of("success", true, "data", service.getByUserId(userId))); }
+        catch (Exception e) { return ResponseEntity.notFound().build(); }
+    }
     @PutMapping("/{id}/availability") public ResponseEntity<?> setAvailability(@PathVariable Long id, @RequestBody Map<String, Boolean> body) {
         try { return ResponseEntity.ok(Map.of("success", true, "data", service.setAvailability(id, body.get("available")))); }
         catch (Exception e) { return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage())); }

@@ -17,7 +17,9 @@ public class OrderItem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false)
+    // insertable=false, updatable=false: FK is managed by @JoinColumn on Order.items
+    // Without this, Hibernate inserts NULL (NOT NULL constraint violation) then updates the FK
+    @Column(name = "orderId", insertable = false, updatable = false)
     private Long orderId;
 
     @Column(nullable = false)

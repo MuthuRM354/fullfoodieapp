@@ -1,18 +1,31 @@
 package com.foodieapp.delivery.service;
+
 import com.foodieapp.delivery.model.Assignment;
 import com.foodieapp.delivery.model.AssignmentStatus;
 import com.foodieapp.delivery.repository.AssignmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.time.LocalDateTime;
 import java.util.List;
-@Service @RequiredArgsConstructor
+
+@Service
+@RequiredArgsConstructor
 public class AssignmentService {
+
     private final AssignmentRepository repo;
-    public Assignment create(Assignment a) { return repo.save(a); }
+
+    @Transactional
+    public Assignment create(Assignment a) {
+        return repo.save(a);
+    }
+
     public Assignment getById(Long id) {
         return repo.findById(id).orElseThrow(() -> new RuntimeException("Assignment not found: " + id));
     }
+
+    @Transactional
     public Assignment updateStatus(Long id, AssignmentStatus status) {
         Assignment a = getById(id);
         a.setStatus(status);
@@ -20,5 +33,8 @@ public class AssignmentService {
         if (status == AssignmentStatus.DELIVERED) a.setDeliveredAt(LocalDateTime.now());
         return repo.save(a);
     }
-    public List<Assignment> getByPartner(Long partnerId) { return repo.findByDeliveryPartnerId(partnerId); }
+
+    public List<Assignment> getByPartner(Long partnerId) {
+        return repo.findByDeliveryPartnerId(partnerId);
+    }
 }

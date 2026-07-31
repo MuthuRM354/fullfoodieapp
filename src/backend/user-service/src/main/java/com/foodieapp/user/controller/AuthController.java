@@ -1,9 +1,12 @@
 package com.foodieapp.user.controller;
 
+import com.foodieapp.user.dto.ChangePasswordRequest;
 import com.foodieapp.user.dto.JwtResponse;
 import com.foodieapp.user.dto.LoginRequest;
 import com.foodieapp.user.dto.RegisterRequest;
 import com.foodieapp.user.service.AuthService;
+import com.foodieapp.user.service.UserService;
+import com.foodieapp.user.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -19,6 +22,8 @@ import java.util.Map;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
@@ -52,5 +57,24 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<?> logout() {
         return ResponseEntity.ok(Map.of("success", true, "message", "Logged out successfully"));
+    }
+
+    /**
+     * POST /api/auth/change-password
+     * Header: Authorization: Bearer <token>
+     * Body: { currentPassword, newPassword, confirmPassword }
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<?> changePassword(
+            @RequestHeader("Authorization") String authHeader,
+            @Valid @RequestBody ChangePasswordRequest request) {
+        try {
+            String token = authHeader.replace("Bearer ", "").trim();
+            Long userId = jwtUtil.extractUserId(token);
+            userService.changePassword(userId, request);
+            return ResponseEntity.ok(Map.of("success", true, "message", "Password changed successfully"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
     }
 }

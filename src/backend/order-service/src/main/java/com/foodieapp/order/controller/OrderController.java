@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -24,7 +25,15 @@ public class OrderController {
         try {
             Long userId = Long.parseLong(request.get("userId").toString());
             String deliveryAddress = request.get("deliveryAddress").toString();
-            Order order = orderService.placeOrder(userId, deliveryAddress);
+
+            // Accept totalAmount from frontend (includes delivery fee + tax).
+            // If not provided, backend will calculate from cart items.
+            BigDecimal totalAmount = null;
+            if (request.containsKey("totalAmount") && request.get("totalAmount") != null) {
+                totalAmount = new BigDecimal(request.get("totalAmount").toString());
+            }
+
+            Order order = orderService.placeOrder(userId, deliveryAddress, totalAmount);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("success", true, "message", "Order placed", "data", order));
         } catch (Exception e) {

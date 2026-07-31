@@ -18,9 +18,10 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
     private final CartService cartService;
+    private final OrderNotificationService notificationService;
 
     @Transactional
-    public Order placeOrder(Long userId, String deliveryAddress) {
+    public Order placeOrder(Long userId, String deliveryAddress, BigDecimal frontendTotal) {
         Cart cart = cartRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Cart is empty"));
         if (cart.getItems().isEmpty()) {
@@ -37,9 +38,12 @@ public class OrderService {
                         .build())
                 .collect(Collectors.toList());
 
-        BigDecimal total = orderItems.stream()
-                .map(OrderItem::getSubtotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Use frontend total (includes delivery + tax) if provided; otherwise sum cart items
+        BigDecimal total = (frontendTotal != null && frontendTotal.compareTo(BigDecimal.ZERO) > 0)
+                ? frontendTotal
+                : orderItems.stream()
+                        .map(OrderItem::getSubtotal)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
 
         Order order = Order.builder()
                 .userId(userId)
@@ -54,13 +58,18 @@ public class OrderService {
                 .build();
 
         order = orderRepository.save(order);
-        // Set orderId on each item
-        Long orderId = order.getId();
-        order.getItems().forEach(item -> item.setOrderId(orderId));
-        order = orderRepository.save(order);
-
         cartService.clearCart(userId);
+
+        // Notify user that order was placed (non-blocking — failure won't roll back the order)
+        notificationService.notifyOrderPlaced(order);
+
         return order;
+    }
+
+    // Overload for backward compatibility (e.g. admin/internal calls)
+    @Transactional
+    public Order placeOrder(Long userId, String deliveryAddress) {
+        return placeOrder(userId, deliveryAddress, null);
     }
 
     public Order getOrder(Long orderId) {
@@ -68,10 +77,16 @@ public class OrderService {
                 .orElseThrow(() -> new RuntimeException("Order not found: " + orderId));
     }
 
+    @Transactional
     public Order updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = getOrder(orderId);
         order.setStatus(status);
-        return orderRepository.save(order);
+        order = orderRepository.save(order);
+
+        // Notify user of status change (non-blocking)
+        notificationService.notifyStatusChange(order);
+
+        return order;
     }
 
     public List<Order> getOrdersByUser(Long userId) {
@@ -84,7 +99,8 @@ public class OrderService {
 
     public List<Order> getOrderHistory(Long userId) {
         return orderRepository.findByUserIdOrderByCreatedAtDesc(userId).stream()
-                .filter(o -> o.getStatus() == OrderStatus.DELIVERED || o.getStatus() == OrderStatus.CANCELLED)
+                .filter(o -> o.getStatus() == OrderStatus.DELIVERED
+                          || o.getStatus() == OrderStatus.CANCELLED)
                 .collect(Collectors.toList());
     }
 }

@@ -11,6 +11,7 @@ public class Review {
     @Column(nullable = false) private Long userId;
     @Column(nullable = false) private Long restaurantId;
     private Long orderId;
+    private String userName;
     @Column(nullable = false) private Integer rating;
     @Column(length = 2000) private String comment;
     @Enumerated(EnumType.STRING) @Builder.Default private ReviewStatus status = ReviewStatus.APPROVED;

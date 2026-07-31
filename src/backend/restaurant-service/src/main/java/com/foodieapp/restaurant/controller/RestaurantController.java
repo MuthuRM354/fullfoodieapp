@@ -73,4 +73,23 @@ public class RestaurantController {
         List<Restaurant> restaurants = restaurantService.getRestaurantsByOwner(ownerId);
         return ResponseEntity.ok(Map.of("success", true, "data", restaurants));
     }
+
+    /**
+     * Called internally by review-service after a review is added/deleted.
+     * PUT /api/restaurants/{id}/rating
+     * Body: { "averageRating": 4.3, "totalReviews": 17 }
+     */
+    @PutMapping("/{id}/rating")
+    public ResponseEntity<?> updateRating(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> body) {
+        try {
+            double averageRating = Double.parseDouble(body.get("averageRating").toString());
+            int    totalReviews  = Integer.parseInt(body.get("totalReviews").toString());
+            Restaurant updated = restaurantService.updateRating(id, averageRating, totalReviews);
+            return ResponseEntity.ok(Map.of("success", true, "data", updated));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("success", false, "message", e.getMessage()));
+        }
+    }
 }

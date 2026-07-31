@@ -1,1 +1,3 @@
-// This file is intentionally left as a placeholder.
+package com.foodieapp.shared.utils;
+/** Placeholder */
+public class StringUtils {}

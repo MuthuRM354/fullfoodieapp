@@ -6,6 +6,7 @@ import com.foodieapp.payment.repository.TransactionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -15,6 +16,7 @@ public class RefundService {
     private final RefundRepository refundRepository;
     private final TransactionRepository transactionRepository;
 
+    @Transactional
     public RefundRequest requestRefund(Long paymentId, String reason) {
         Transaction transaction = transactionRepository.findById(paymentId)
                 .orElseThrow(() -> new RuntimeException("Payment not found: " + paymentId));
@@ -30,7 +32,7 @@ public class RefundService {
         refund = refundRepository.save(refund);
         log.info("Refund requested for payment: {}", paymentId);
 
-        // Auto-approve for simulation
+        // Auto-approve simulation — both saves must be atomic
         refund.setStatus(RefundStatus.APPROVED);
         transaction.setStatus(PaymentStatus.REFUNDED);
         transactionRepository.save(transaction);
