@@ -3,22 +3,28 @@
 # https://render.com/docs/blueprint-spec
 #
 # DATABASE SETUP (one-time, before deploying):
-#   1. Create a FREE MySQL database at https://planetscale.com
-#      (5 GB storage, 1 B row reads/month — no credit card needed)
-#   2. Get the connection string: Settings → Connect → Java
-#   3. Create one database per service (or one shared DB with
-#      separate schemas) and fill in the env vars below.
-#   NOTE: this blueprint intentionally does NOT provision Render
-#   databases (Render's own Postgres isn't used — every service is
-#   MySQL/JPA). DB_URL/DB_USERNAME/DB_PASSWORD below are `sync: false`
+#   PlanetScale dropped its free tier in April 2024 (now ~$39/mo min).
+#   Use Aiven for MySQL instead — genuinely free, no card needed:
+#   1. Create a free MySQL service at https://aiven.io/free-mysql-database
+#   2. Copy the Host/Port/Password from its Overview page (user is
+#      always `avnadmin`)
+#   3. Connect and run db/init.sql to create all 9 databases (skip the
+#      CREATE USER block — just use avnadmin directly for every service)
+#   4. Fill in DB_URL/DB_USERNAME/DB_PASSWORD per service below in the
+#      Render dashboard, e.g.:
+#      DB_URL=jdbc:mysql://<host>:<port>/foodieapp_users?sslMode=REQUIRED&serverTimezone=UTC&allowPublicKeyRetrieval=true
+#   NOTE: this blueprint intentionally does NOT provision Render's own
+#   databases (Render's free DB tier is Postgres — every service here
+#   is MySQL/JPA). DB_URL/DB_USERNAME/DB_PASSWORD below are `sync: false`
 #   placeholders you fill in per service in the Render dashboard.
 #
 # SHARED SECRETS (JWT_SECRET, INTERNAL_API_KEY):
-#   Defined once in the `shared-secrets` envVarGroup below and
-#   referenced by every service via `envVarGroups`. Render generates
-#   each value once and the SAME value is injected into every service
-#   automatically — no manual copy/paste between service dashboards,
-#   and no risk of the values drifting out of sync.
+#   Defined once in the `shared-secrets` envVarGroup below and pulled
+#   into every service via `fromGroup: shared-secrets` in its envVars
+#   list. Render generates each value once and the SAME value is
+#   injected into every service automatically — no manual copy/paste
+#   between service dashboards, and no risk of the values drifting out
+#   of sync.
 #
 # DEPLOY ORDER:
 #   1. Push this repo to GitHub
@@ -49,9 +55,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/api-gateway-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -87,9 +92,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/user-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -111,9 +115,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/restaurant-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -135,9 +138,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/order-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -161,9 +163,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/payment-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -185,9 +186,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/delivery-partner-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -209,9 +209,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/notification-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -249,9 +248,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/review-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -275,9 +273,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/tracking-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
@@ -299,9 +296,8 @@ services:
     buildCommand: ./mvnw clean package -DskipTests
     startCommand: java $JAVA_OPTS -jar target/admin-service-*.jar
     healthCheckPath: /actuator/health
-    envVarGroups:
-      - shared-secrets
     envVars:
+      - fromGroup: shared-secrets
       - key: JAVA_OPTS
         value: -Xmx400m -Xms128m -XX:+UseSerialGC
       - key: SERVER_PORT
