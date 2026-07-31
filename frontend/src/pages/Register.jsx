@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
   const [form, setForm] = useState({
-    name: '', email: '', password: '', confirmPassword: '', phone: '',
+    name: '', email: '', password: '', confirmPassword: '', phone: '', role: 'CUSTOMER',
   });
   const [loading, setLoading] = useState(false);
   const { register } = useAuth();
@@ -27,7 +27,7 @@ export default function Register() {
     setLoading(true);
     const result = await register({
       name: form.name, email: form.email,
-      password: form.password, phone: form.phone,
+      password: form.password, phone: form.phone, role: form.role,
     });
     setLoading(false);
     if (result.success) {
@@ -62,6 +62,32 @@ export default function Register() {
             <label className="form-label">Phone number</label>
             <input className="form-input" type="tel" name="phone"
               placeholder="+91 9876543210" value={form.phone} onChange={handleChange} />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">I want to *</label>
+            <div className="role-select">
+              {[
+                { value: 'CUSTOMER', label: '🍽️ Order food', desc: 'Browse restaurants & order' },
+                { value: 'RESTAURANT_OWNER', label: '🏪 Sell food', desc: 'List my restaurant' },
+                { value: 'DELIVERY_PARTNER', label: '🛵 Deliver orders', desc: 'Earn by delivering' },
+              ].map((opt) => (
+                <label
+                  key={opt.value}
+                  className={`role-select__option${form.role === opt.value ? ' role-select__option--active' : ''}`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value={opt.value}
+                    checked={form.role === opt.value}
+                    onChange={handleChange}
+                  />
+                  <span className="role-select__label">{opt.label}</span>
+                  <span className="role-select__desc">{opt.desc}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="form-row">
