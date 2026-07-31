@@ -51,7 +51,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/api-gateway
     dockerfilePath: src/backend/api-gateway/Dockerfile
     dockerContext: src/backend/api-gateway
     healthCheckPath: /actuator/health
@@ -88,7 +87,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/user-service
     dockerfilePath: src/backend/user-service/Dockerfile
     dockerContext: src/backend/user-service
     healthCheckPath: /actuator/health
@@ -111,7 +109,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/restaurant-service
     dockerfilePath: src/backend/restaurant-service/Dockerfile
     dockerContext: src/backend/restaurant-service
     healthCheckPath: /actuator/health
@@ -134,7 +131,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/order-service
     dockerfilePath: src/backend/order-service/Dockerfile
     dockerContext: src/backend/order-service
     healthCheckPath: /actuator/health
@@ -159,7 +155,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/payment-service
     dockerfilePath: src/backend/payment-service/Dockerfile
     dockerContext: src/backend/payment-service
     healthCheckPath: /actuator/health
@@ -182,7 +177,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/delivery-partner-service
     dockerfilePath: src/backend/delivery-partner-service/Dockerfile
     dockerContext: src/backend/delivery-partner-service
     healthCheckPath: /actuator/health
@@ -205,7 +199,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/notification-service
     dockerfilePath: src/backend/notification-service/Dockerfile
     dockerContext: src/backend/notification-service
     healthCheckPath: /actuator/health
@@ -244,7 +237,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/review-service
     dockerfilePath: src/backend/review-service/Dockerfile
     dockerContext: src/backend/review-service
     healthCheckPath: /actuator/health
@@ -269,7 +261,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/tracking-service
     dockerfilePath: src/backend/tracking-service/Dockerfile
     dockerContext: src/backend/tracking-service
     healthCheckPath: /actuator/health
@@ -292,7 +283,6 @@ services:
     runtime: docker
     region: oregon
     plan: free
-    rootDir: src/backend/admin-service
     dockerfilePath: src/backend/admin-service/Dockerfile
     dockerContext: src/backend/admin-service
     healthCheckPath: /actuator/health
