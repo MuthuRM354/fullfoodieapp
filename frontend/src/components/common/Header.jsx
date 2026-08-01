@@ -32,12 +32,17 @@ export default function Header() {
   return (
     <header className="header">
       <div className="header__inner">
-        <Link to="/" className="header__logo">
+        <Link to={user?.role === 'DELIVERY_PARTNER' ? '/delivery' : '/'} className="header__logo">
           <span>🍔</span> FoodieApp
         </Link>
 
         <nav className="header__nav">
-          <Link to="/" className="header__link">Home</Link>
+          {/* Delivery partners don't have a browse/home page — "Deliveries"
+              below is their only landing page, so a separate Home link
+              would just be a redundant link to the same place. */}
+          {user?.role !== 'DELIVERY_PARTNER' && (
+            <Link to="/" className="header__link">Home</Link>
+          )}
 
           {user ? (
             <>
