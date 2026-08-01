@@ -2,8 +2,10 @@ package com.foodieapp.order.controller;
 
 import com.foodieapp.order.model.Cart;
 import com.foodieapp.order.model.CartItem;
+import com.foodieapp.order.security.AuthUtil;
 import com.foodieapp.order.service.CartService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,6 +21,10 @@ public class CartController {
 
     @GetMapping("/{userId}")
     public ResponseEntity<?> getCart(@PathVariable Long userId) {
+        if (!AuthUtil.canManage(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "Not your cart"));
+        }
         Cart cart = cartService.getCart(userId);
         return ResponseEntity.ok(Map.of("success", true, "data", cart));
     }
@@ -26,6 +32,10 @@ public class CartController {
     @PostMapping("/{userId}/items")
     public ResponseEntity<?> addItem(@PathVariable Long userId,
                                      @RequestBody Map<String, Object> request) {
+        if (!AuthUtil.canManage(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "Not your cart"));
+        }
         try {
             CartItem item = CartItem.builder()
                     .menuItemId(Long.parseLong(request.get("menuItemId").toString()))
@@ -45,6 +55,10 @@ public class CartController {
     @PutMapping("/{userId}/items/{itemId}")
     public ResponseEntity<?> updateItem(@PathVariable Long userId, @PathVariable Long itemId,
                                         @RequestBody Map<String, Object> request) {
+        if (!AuthUtil.canManage(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "Not your cart"));
+        }
         try {
             int quantity = Integer.parseInt(request.get("quantity").toString());
             Cart cart = cartService.updateItem(userId, itemId, quantity);
@@ -56,6 +70,10 @@ public class CartController {
 
     @DeleteMapping("/{userId}/items/{itemId}")
     public ResponseEntity<?> removeItem(@PathVariable Long userId, @PathVariable Long itemId) {
+        if (!AuthUtil.canManage(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "Not your cart"));
+        }
         try {
             Cart cart = cartService.removeItem(userId, itemId);
             return ResponseEntity.ok(Map.of("success", true, "data", cart));
@@ -66,6 +84,10 @@ public class CartController {
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<?> clearCart(@PathVariable Long userId) {
+        if (!AuthUtil.canManage(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("success", false, "message", "Not your cart"));
+        }
         cartService.clearCart(userId);
         return ResponseEntity.ok(Map.of("success", true, "message", "Cart cleared"));
     }

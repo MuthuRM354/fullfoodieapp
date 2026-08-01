@@ -3,6 +3,7 @@ package com.foodieapp.payment.controller;
 import com.foodieapp.payment.model.PaymentMethod;
 import com.foodieapp.payment.model.PaymentStatus;
 import com.foodieapp.payment.model.Transaction;
+import com.foodieapp.payment.security.AuthUtil;
 import com.foodieapp.payment.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,10 @@ public class PaymentController {
         try {
             Long orderId = Long.parseLong(request.get("orderId").toString());
             Long userId = Long.parseLong(request.get("userId").toString());
+            if (!AuthUtil.canManage(userId)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "Can't pay for another user's order"));
+            }
             BigDecimal amount = new BigDecimal(request.get("amount").toString());
             PaymentMethod method = PaymentMethod.valueOf(
                 request.getOrDefault("paymentMethod", "CASH").toString());
@@ -50,6 +55,10 @@ public class PaymentController {
     public ResponseEntity<?> getPayment(@PathVariable Long paymentId) {
         try {
             Transaction txn = paymentService.getPayment(paymentId);
+            if (!AuthUtil.canManage(txn.getUserId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "Not your payment"));
+            }
             return ResponseEntity.ok(Map.of("success", true, "data", txn));
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -60,6 +69,10 @@ public class PaymentController {
     public ResponseEntity<?> getPaymentByOrder(@PathVariable Long orderId) {
         try {
             Transaction txn = paymentService.getPaymentByOrder(orderId);
+            if (!AuthUtil.canManage(txn.getUserId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "Not your payment"));
+            }
             return ResponseEntity.ok(Map.of("success", true, "data", txn));
         } catch (Exception e) {
             return ResponseEntity.notFound().build();
@@ -69,6 +82,11 @@ public class PaymentController {
     @PostMapping("/{paymentId}/confirm")
     public ResponseEntity<?> confirmPayment(@PathVariable Long paymentId) {
         try {
+            Transaction existing = paymentService.getPayment(paymentId);
+            if (!AuthUtil.canManage(existing.getUserId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "Not your payment"));
+            }
             Transaction txn = paymentService.confirmPayment(paymentId);
             return ResponseEntity.ok(Map.of("success", true, "data", txn));
         } catch (Exception e) {

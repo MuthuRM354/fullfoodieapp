@@ -1,6 +1,7 @@
 package com.foodieapp.restaurant.controller;
 
 import com.foodieapp.restaurant.model.Restaurant;
+import com.foodieapp.restaurant.security.AuthUtil;
 import com.foodieapp.restaurant.service.RestaurantService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -40,6 +41,15 @@ public class RestaurantController {
     @PostMapping
     public ResponseEntity<?> createRestaurant(@RequestBody Restaurant restaurant) {
         try {
+            // Owner is always the authenticated caller — never trust a
+            // client-supplied ownerId, or anyone could create a restaurant
+            // "owned" by someone else.
+            Long callerId = AuthUtil.currentUserId();
+            if (callerId == null) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "Not authenticated"));
+            }
+            restaurant.setOwnerId(callerId);
             Restaurant created = restaurantService.createRestaurant(restaurant);
             return ResponseEntity.status(HttpStatus.CREATED)
                     .body(Map.of("success", true, "message", "Restaurant created", "data", created));
@@ -51,6 +61,11 @@ public class RestaurantController {
     @PutMapping("/{id}")
     public ResponseEntity<?> updateRestaurant(@PathVariable Long id, @RequestBody Restaurant restaurant) {
         try {
+            Restaurant existing = restaurantService.getRestaurantById(id);
+            if (!AuthUtil.canManage(existing.getOwnerId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "You don't own this restaurant"));
+            }
             Restaurant updated = restaurantService.updateRestaurant(id, restaurant);
             return ResponseEntity.ok(Map.of("success", true, "data", updated));
         } catch (Exception e) {
@@ -61,6 +76,11 @@ public class RestaurantController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteRestaurant(@PathVariable Long id) {
         try {
+            Restaurant existing = restaurantService.getRestaurantById(id);
+            if (!AuthUtil.canManage(existing.getOwnerId())) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("success", false, "message", "You don't own this restaurant"));
+            }
             restaurantService.deleteRestaurant(id);
             return ResponseEntity.ok(Map.of("success", true, "message", "Restaurant deactivated"));
         } catch (Exception e) {

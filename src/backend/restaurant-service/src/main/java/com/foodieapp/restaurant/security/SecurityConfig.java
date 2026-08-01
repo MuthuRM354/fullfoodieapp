@@ -33,7 +33,12 @@ public class SecurityConfig {
                 // Public: anyone can browse restaurants and menus
                 .requestMatchers(HttpMethod.GET, "/api/restaurants/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/restaurants").permitAll()
-                // Write operations require authentication
+                // Rating sync — internal call from review-service only (see JwtAuthFilter)
+                .requestMatchers(HttpMethod.PUT, "/api/restaurants/*/rating").hasRole("SERVICE")
+                // Everything else that writes restaurant/menu data requires the
+                // owner role (ownership of the SPECIFIC restaurant is checked in
+                // the controller, since that depends on which resource is targeted)
+                .requestMatchers("/api/restaurants/**").hasAnyRole("RESTAURANT_OWNER", "ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

@@ -3,6 +3,7 @@ package com.foodieapp.order.security;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -29,6 +30,12 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/actuator/**").permitAll()
+                // Delivery partners don't order food through this account —
+                // cart and order placement are customer-facing (see also
+                // RestaurantDetail.jsx/Header.jsx/Home.jsx on the frontend).
+                .requestMatchers(HttpMethod.POST, "/api/cart/**").hasAnyRole("CUSTOMER", "RESTAURANT_OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/cart/**").hasAnyRole("CUSTOMER", "RESTAURANT_OWNER", "ADMIN")
+                .requestMatchers(HttpMethod.POST, "/api/orders").hasAnyRole("CUSTOMER", "RESTAURANT_OWNER", "ADMIN")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
