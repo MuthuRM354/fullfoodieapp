@@ -75,6 +75,10 @@ export default function RestaurantDetail() {
       navigate('/login');
       return;
     }
+    if (user.role === 'DELIVERY_PARTNER') {
+      toast.info("Delivery partner accounts can't place orders");
+      return;
+    }
     const result = await addItem({
       menuItemId: item.id,
       restaurantId: Number(id),
@@ -156,7 +160,7 @@ export default function RestaurantDetail() {
                   )}
                   <div className="menu-item__foot">
                     <span className="menu-item__price">₹{item.price}</span>
-                    {cartItem ? (
+                    {user?.role === 'DELIVERY_PARTNER' ? null : cartItem ? (
                       <div className="qty-ctrl">
                         <button
                           className="qty-btn"
