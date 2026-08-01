@@ -63,7 +63,12 @@ public class GatewayController {
                     .headers(response.getHeaders())
                     .body(response.getBody());
         } catch (HttpStatusCodeException ex) {
+            // Must forward the original response headers too (Content-Type,
+            // and critically Content-Encoding) — without them, a compressed
+            // error body from the origin service arrives at the client with
+            // no way to decompress it, rendering as unreadable binary.
             return ResponseEntity.status(ex.getStatusCode())
+                    .headers(ex.getResponseHeaders())
                     .body(ex.getResponseBodyAsByteArray());
         } catch (Exception ex) {
             log.error("Gateway error for {} {}: {}", method, path, ex.getMessage());
