@@ -51,15 +51,21 @@ export default function Header() {
                 )}
               </Link>
 
-              <Link to="/cart" className="header__cart">
-                🛒 Cart
-                {itemCount > 0 && (
-                  <span className="header__cart-pill">{itemCount}</span>
-                )}
-              </Link>
-              <Link to="/orders"  className="header__link">Orders</Link>
+              {/* Delivery partners don't order food through this account —
+                  cart/orders/payments are a customer-facing concept. */}
+              {user.role !== 'DELIVERY_PARTNER' && (
+                <>
+                  <Link to="/cart" className="header__cart">
+                    🛒 Cart
+                    {itemCount > 0 && (
+                      <span className="header__cart-pill">{itemCount}</span>
+                    )}
+                  </Link>
+                  <Link to="/orders" className="header__link">Orders</Link>
+                  <Link to="/payments" className="header__link">Payments</Link>
+                </>
+              )}
               <Link to="/profile" className="header__link">Profile</Link>
-              <Link to="/payments" className="header__link">Payments</Link>
 
               {/* Role-specific dashboard links */}
               {user.role === 'RESTAURANT_OWNER' && (

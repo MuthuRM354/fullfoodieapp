@@ -163,6 +163,7 @@ export default function DeliveryDashboard() {
                     <div className="order-card__id">Assignment #{a.id}</div>
                     <div style={{ fontSize: 'var(--fs-sm)', color: 'var(--text-3)' }}>
                       Order #{a.orderId}
+                      {a.restaurantName && ` · ${a.restaurantName}`}
                       {a.deliveryAddress && ` · 📍 ${a.deliveryAddress}`}
                     </div>
                   </div>

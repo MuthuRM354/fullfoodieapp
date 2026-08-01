@@ -148,6 +148,8 @@ services:
         sync: false
       - key: NOTIFICATION_SERVICE_URL
         value: https://foodieapp-notification-service.onrender.com
+      - key: DELIVERY_SERVICE_URL
+        value: https://foodieapp-delivery-service.onrender.com
 
   # ── Payment Service ──────────────────────────────────────
   - type: web

@@ -19,6 +19,7 @@ public class OrderService {
     private final CartRepository cartRepository;
     private final CartService cartService;
     private final OrderNotificationService notificationService;
+    private final DeliveryAssignmentService deliveryAssignmentService;
 
     @Transactional
     public Order placeOrder(Long userId, String deliveryAddress, BigDecimal frontendTotal) {
@@ -85,6 +86,11 @@ public class OrderService {
 
         // Notify user of status change (non-blocking)
         notificationService.notifyStatusChange(order);
+
+        // Ready for pickup — hand it off to a delivery partner (non-blocking)
+        if (status == OrderStatus.READY_FOR_PICKUP) {
+            deliveryAssignmentService.autoAssignPartner(order);
+        }
 
         return order;
     }

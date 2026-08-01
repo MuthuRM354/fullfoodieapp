@@ -13,6 +13,10 @@ public class Assignment {
     private Long id;
     @Column(nullable = false) private Long orderId;
     @Column(nullable = false) private Long deliveryPartnerId;
+    // Denormalized from the order at assignment time, so the partner's
+    // dashboard can show useful details without an extra cross-service call.
+    private String restaurantName;
+    private String deliveryAddress;
     @CreationTimestamp @Column(updatable = false) private LocalDateTime assignedAt;
     private LocalDateTime pickedAt;
     private LocalDateTime deliveredAt;
