@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getProfile, updateProfile, changePassword } from '../api/auth';
+import { getAddresses, addAddress, updateAddress, deleteAddress } from '../api/addresses';
 import { useAuth } from '../context/AuthContext';
+
+const ADDRESS_LABELS = ['Home', 'Work', 'Other'];
 
 export default function Profile() {
   const { user, logout } = useAuth();
@@ -14,6 +17,22 @@ export default function Profile() {
   // Password change state
   const [pwForm, setPwForm]     = useState({ currentPassword: '', newPassword: '', confirmPassword: '' });
   const [pwLoading, setPwLoading] = useState(false);
+
+  // Saved addresses state
+  const [addresses, setAddresses]   = useState([]);
+  const [addrForm, setAddrForm]     = useState({ label: 'Home', addressLine: '' });
+  const [addrSaving, setAddrSaving] = useState(false);
+
+  const loadAddresses = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const res = await getAddresses(user.id);
+      const data = res.data?.data || res.data;
+      setAddresses(Array.isArray(data) ? data : []);
+    } catch {
+      // non-critical — address book is optional
+    }
+  }, [user?.id]);
 
   useEffect(() => {
     const load = async () => {
@@ -32,7 +51,45 @@ export default function Profile() {
       }
     };
     load();
-  }, [user]);
+    loadAddresses();
+  }, [user, loadAddresses]);
+
+  const handleAddrFormChange = (e) => setAddrForm({ ...addrForm, [e.target.name]: e.target.value });
+
+  const handleAddAddress = async (e) => {
+    e.preventDefault();
+    if (!addrForm.addressLine.trim()) { toast.error('Please enter the address'); return; }
+    setAddrSaving(true);
+    try {
+      await addAddress(user.id, addrForm);
+      toast.success('Address saved!');
+      setAddrForm({ label: 'Home', addressLine: '' });
+      loadAddresses();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save address');
+    } finally {
+      setAddrSaving(false);
+    }
+  };
+
+  const handleSetDefault = async (addr) => {
+    try {
+      await updateAddress(user.id, addr.id, { label: addr.label, addressLine: addr.addressLine, isDefault: true });
+      loadAddresses();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to set default address');
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    try {
+      await deleteAddress(user.id, addressId);
+      toast.info('Address removed');
+      loadAddresses();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to remove address');
+    }
+  };
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
@@ -168,6 +225,81 @@ export default function Profile() {
                 disabled={loading}
               >
                 {loading ? 'Saving…' : 'Save Changes'}
+              </button>
+            </form>
+          </div>
+
+          {/* Saved Addresses */}
+          <div className="profile-main__head" style={{ marginTop: 'var(--sp-8)' }}>
+            <span className="profile-main__title">Saved Addresses</span>
+          </div>
+          <div className="profile-main__body">
+            {addresses.length === 0 ? (
+              <p className="empty-text" style={{ marginBottom: 'var(--sp-4)' }}>
+                No saved addresses yet — add one below so you don't have to type it at checkout every time.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', marginBottom: 'var(--sp-5)' }}>
+                {addresses.map((addr) => (
+                  <div
+                    key={addr.id}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
+                      gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)',
+                      border: `1.5px solid ${addr.isDefault ? 'var(--primary)' : 'var(--border)'}`,
+                      borderRadius: 'var(--r)',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 'var(--fs-sm)' }}>
+                        {addr.label} {addr.isDefault && <span className="badge badge-green" style={{ marginLeft: 6 }}>Default</span>}
+                      </div>
+                      <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 2 }}>
+                        {addr.addressLine}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                      {!addr.isDefault && (
+                        <button className="btn btn-outline btn-sm" onClick={() => handleSetDefault(addr)}>
+                          Set default
+                        </button>
+                      )}
+                      <button className="btn btn-danger btn-sm" onClick={() => handleDeleteAddress(addr.id)}>
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <form onSubmit={handleAddAddress}>
+              <div className="form-row">
+                <div className="form-group">
+                  <label className="form-label">Label</label>
+                  <select
+                    className="form-input"
+                    name="label"
+                    value={addrForm.label}
+                    onChange={handleAddrFormChange}
+                  >
+                    {ADDRESS_LABELS.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Address</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    name="addressLine"
+                    value={addrForm.addressLine}
+                    onChange={handleAddrFormChange}
+                    placeholder="e.g. 42, MG Road, Bangalore 560001"
+                  />
+                </div>
+              </div>
+              <button className="btn btn-outline" type="submit" disabled={addrSaving}>
+                {addrSaving ? 'Saving…' : '+ Add Address'}
               </button>
             </form>
           </div>

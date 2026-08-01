@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { placeOrder } from '../api/orders';
 import { getProfile } from '../api/auth';
+import { getAddresses } from '../api/addresses';
 import { initiatePayment } from '../api/payments';
 
 const PAYMENT_METHODS = [
@@ -21,16 +22,39 @@ export default function Cart() {
   const [placing, setPlacing]         = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [paymentMethod, setPaymentMethod]     = useState('CASH');
+  const [savedAddresses, setSavedAddresses]   = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
 
-  // Pre-fill delivery address from saved profile
+  // Pre-fill delivery address from the saved address book — default address
+  // wins, otherwise fall back to the legacy single profile address field.
   useEffect(() => {
-    getProfile()
+    if (!user?.id) return;
+    getAddresses(user.id)
       .then(res => {
         const data = res.data?.data || res.data;
-        if (data?.address) setDeliveryAddress(data.address);
+        const list = Array.isArray(data) ? data : [];
+        setSavedAddresses(list);
+        const def = list.find(a => a.isDefault) || list[0];
+        if (def) {
+          setSelectedAddressId(def.id);
+          setDeliveryAddress(def.addressLine);
+          return;
+        }
+        // No saved addresses yet — fall back to the old profile address
+        getProfile()
+          .then(pRes => {
+            const pData = pRes.data?.data || pRes.data;
+            if (pData?.address) setDeliveryAddress(pData.address);
+          })
+          .catch(() => {});
       })
       .catch(() => {}); // non-critical — user can type manually
-  }, []);
+  }, [user?.id]);
+
+  const handleSelectAddress = (addr) => {
+    setSelectedAddressId(addr.id);
+    setDeliveryAddress(addr.addressLine);
+  };
 
   const items       = cart?.items || [];
   const deliveryFee = 40;
@@ -142,13 +166,33 @@ export default function Cart() {
           {/* Delivery address input inside the cart box */}
           <div style={{ padding: 'var(--sp-4) var(--sp-5)', borderTop: '1px solid var(--border)' }}>
             <label className="form-label">📍 Delivery Address</label>
+
+            {savedAddresses.length > 0 && (
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                {savedAddresses.map(addr => (
+                  <button
+                    key={addr.id}
+                    type="button"
+                    className={`btn btn-sm ${selectedAddressId === addr.id ? 'btn-primary' : 'btn-outline'}`}
+                    onClick={() => handleSelectAddress(addr)}
+                    title={addr.addressLine}
+                  >
+                    {addr.label === 'Home' ? '🏠' : addr.label === 'Work' ? '🏢' : '📍'} {addr.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             <input
               className="form-input"
               type="text"
               placeholder="Enter your full delivery address"
               value={deliveryAddress}
-              onChange={e => setDeliveryAddress(e.target.value)}
+              onChange={e => { setDeliveryAddress(e.target.value); setSelectedAddressId(null); }}
             />
+            <p style={{ fontSize: 'var(--fs-xs)', color: 'var(--text-muted)', marginTop: 6 }}>
+              Manage saved addresses from your <Link to="/profile">Profile</Link>.
+            </p>
           </div>
         </div>
 
