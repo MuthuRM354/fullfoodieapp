@@ -21,3 +21,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# local-only Cypress E2E suite (not committed)
+/cypress.config.js
+/cypress/

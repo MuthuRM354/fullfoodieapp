@@ -30,10 +30,13 @@ export default function Payments() {
       const ordersData = ordersRes.data?.data || ordersRes.data;
       const orders = Array.isArray(ordersData) ? ordersData : [];
 
-      // Fetch payment info for each order that's not PENDING/CANCELLED
-      const paidOrders = orders.filter(o => !['PENDING', 'CANCELLED'].includes(o.status));
+      // Checkout initiates payment at order-placement time (see Cart.jsx),
+      // while the order itself is still PENDING — so a payment can exist for
+      // an order in any status. Try every order and let Promise.allSettled
+      // drop the ones with no payment record (e.g. a genuinely cancelled
+      // order that never reached payment).
       const results = await Promise.allSettled(
-        paidOrders.map(o => getPaymentByOrder(o.id))
+        orders.map(o => getPaymentByOrder(o.id))
       );
 
       const paymentList = results
