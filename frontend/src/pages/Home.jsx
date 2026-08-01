@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import { getRestaurants, searchRestaurants } from '../api/restaurants';
+import { useAuth } from '../context/AuthContext';
 
 export default function Home() {
+  const { user } = useAuth();
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState('');
@@ -34,6 +36,12 @@ export default function Home() {
     if (!val) return null;
     return <span className="badge badge-green">⭐ {Number(val).toFixed(1)}</span>;
   };
+
+  // Delivery partners don't browse/order food through this account —
+  // send them straight to their own dashboard instead.
+  if (user?.role === 'DELIVERY_PARTNER') {
+    return <Navigate to="/delivery" replace />;
+  }
 
   return (
     <>
