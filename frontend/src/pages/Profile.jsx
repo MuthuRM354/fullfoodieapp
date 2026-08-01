@@ -24,7 +24,7 @@ export default function Profile() {
   const [addrSaving, setAddrSaving] = useState(false);
 
   const loadAddresses = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id || user.role === 'DELIVERY_PARTNER') return;
     try {
       const res = await getAddresses(user.id);
       const data = res.data?.data || res.data;
@@ -32,7 +32,7 @@ export default function Profile() {
     } catch {
       // non-critical — address book is optional
     }
-  }, [user?.id]);
+  }, [user?.id, user?.role]);
 
   useEffect(() => {
     const load = async () => {
@@ -210,17 +210,19 @@ export default function Profile() {
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Default Delivery Address</label>
-                <input
-                  className="form-input"
-                  type="text"
-                  name="address"
-                  value={form.address}
-                  onChange={handleChange}
-                  placeholder="e.g. 42, MG Road, Bangalore 560001"
-                />
-              </div>
+              {user?.role !== 'DELIVERY_PARTNER' && (
+                <div className="form-group">
+                  <label className="form-label">Default Delivery Address</label>
+                  <input
+                    className="form-input"
+                    type="text"
+                    name="address"
+                    value={form.address}
+                    onChange={handleChange}
+                    placeholder="e.g. 42, MG Road, Bangalore 560001"
+                  />
+                </div>
+              )}
 
               <button
                 className="btn btn-primary"
@@ -232,7 +234,10 @@ export default function Profile() {
             </form>
           </div>
 
-          {/* Saved Addresses */}
+          {/* Saved Addresses — delivery partners don't order food, so a
+              delivery address book doesn't apply to their account. */}
+          {user?.role !== 'DELIVERY_PARTNER' && (
+          <>
           <div className="profile-main__head" style={{ marginTop: 'var(--sp-8)' }}>
             <span className="profile-main__title">Saved Addresses</span>
           </div>
@@ -306,6 +311,8 @@ export default function Profile() {
               </button>
             </form>
           </div>
+          </>
+          )}
 
           {/* Change Password */}
           <div className="profile-main__head" style={{ marginTop: 'var(--sp-8)' }}>
