@@ -74,7 +74,10 @@ export default function Profile() {
 
   const handleSetDefault = async (addr) => {
     try {
-      await updateAddress(user.id, addr.id, { label: addr.label, addressLine: addr.addressLine, isDefault: true });
+      // Note: the backend's boolean field serializes as "default", not "isDefault"
+      // (Lombok's isDefault() getter loses its "is" prefix under Jackson's bean
+      // naming rules) — same convention already used for DeliveryPartner.isAvailable.
+      await updateAddress(user.id, addr.id, { label: addr.label, addressLine: addr.addressLine, default: true });
       loadAddresses();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to set default address');
@@ -246,20 +249,20 @@ export default function Profile() {
                     style={{
                       display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
                       gap: 'var(--sp-3)', padding: 'var(--sp-3) var(--sp-4)',
-                      border: `1.5px solid ${addr.isDefault ? 'var(--primary)' : 'var(--border)'}`,
+                      border: `1.5px solid ${addr.default ? 'var(--primary)' : 'var(--border)'}`,
                       borderRadius: 'var(--r)',
                     }}
                   >
                     <div>
                       <div style={{ fontWeight: 700, fontSize: 'var(--fs-sm)' }}>
-                        {addr.label} {addr.isDefault && <span className="badge badge-green" style={{ marginLeft: 6 }}>Default</span>}
+                        {addr.label} {addr.default && <span className="badge badge-green" style={{ marginLeft: 6 }}>Default</span>}
                       </div>
                       <div style={{ color: 'var(--text-muted)', fontSize: 'var(--fs-sm)', marginTop: 2 }}>
                         {addr.addressLine}
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                      {!addr.isDefault && (
+                      {!addr.default && (
                         <button className="btn btn-outline btn-sm" onClick={() => handleSetDefault(addr)}>
                           Set default
                         </button>

@@ -34,7 +34,9 @@ export default function Cart() {
         const data = res.data?.data || res.data;
         const list = Array.isArray(data) ? data : [];
         setSavedAddresses(list);
-        const def = list.find(a => a.isDefault) || list[0];
+        // Backend serializes the boolean as "default", not "isDefault" (Lombok
+        // getter-naming quirk — same convention as DeliveryPartner.isAvailable).
+        const def = list.find(a => a.default) || list[0];
         if (def) {
           setSelectedAddressId(def.id);
           setDeliveryAddress(def.addressLine);
