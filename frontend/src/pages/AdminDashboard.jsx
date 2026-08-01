@@ -191,9 +191,9 @@ export default function AdminDashboard() {
                 {auditLogs.map(log => (
                   <tr key={log.id}>
                     <td>{log.id}</td>
-                    <td>{log.action || log.actionType}</td>
-                    <td>{log.performedBy}</td>
-                    <td>{log.targetId || log.resourceId}</td>
+                    <td>{log.action}</td>
+                    <td>{log.adminId}</td>
+                    <td>{log.resourceId}</td>
                     <td>{log.createdAt ? new Date(log.createdAt).toLocaleString('en-IN') : '—'}</td>
                   </tr>
                 ))}
