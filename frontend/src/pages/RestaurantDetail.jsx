@@ -15,7 +15,7 @@ export default function RestaurantDetail() {
   const [reviewForm, setReviewForm] = useState({ rating: 0, comment: '' });
   const [submitting, setSubmitting] = useState(false);
   const [hovered, setHovered]       = useState(0);
-  const { addItem } = useCart();
+  const { cart, addItem, updateItem, removeItem } = useCart();
   const { user }    = useAuth();
   const navigate    = useNavigate();
 
@@ -143,23 +143,41 @@ export default function RestaurantDetail() {
         <div key={cat}>
           <div className="menu-cat-title">{cat}</div>
           <div className="menu-grid">
-            {items.filter(i => i.isAvailable !== false).map((item) => (
-              <div key={item.id} className="menu-item">
-                <div className="menu-item__top">
-                  <span className={`veg-dot ${item.isVeg ? 'veg-dot--veg' : 'veg-dot--nveg'}`} />
-                  <span className="menu-item__name">{item.name}</span>
+            {items.filter(i => i.isAvailable !== false).map((item) => {
+              const cartItem = cart?.items?.find(ci => ci.menuItemId === item.id);
+              return (
+                <div key={item.id} className="menu-item">
+                  <div className="menu-item__top">
+                    <span className={`veg-dot ${item.isVeg ? 'veg-dot--veg' : 'veg-dot--nveg'}`} />
+                    <span className="menu-item__name">{item.name}</span>
+                  </div>
+                  {item.description && (
+                    <p className="menu-item__desc">{item.description}</p>
+                  )}
+                  <div className="menu-item__foot">
+                    <span className="menu-item__price">₹{item.price}</span>
+                    {cartItem ? (
+                      <div className="qty-ctrl">
+                        <button
+                          className="qty-btn"
+                          onClick={() =>
+                            cartItem.quantity > 1
+                              ? updateItem(cartItem.id, cartItem.quantity - 1)
+                              : removeItem(cartItem.id)
+                          }
+                        >−</button>
+                        <span className="qty-val">{cartItem.quantity}</span>
+                        <button className="qty-btn" onClick={() => updateItem(cartItem.id, cartItem.quantity + 1)}>+</button>
+                      </div>
+                    ) : (
+                      <button className="add-btn" onClick={() => handleAddToCart(item)}>
+                        + Add
+                      </button>
+                    )}
+                  </div>
                 </div>
-                {item.description && (
-                  <p className="menu-item__desc">{item.description}</p>
-                )}
-                <div className="menu-item__foot">
-                  <span className="menu-item__price">₹{item.price}</span>
-                  <button className="add-btn" onClick={() => handleAddToCart(item)}>
-                    + Add
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ))}
